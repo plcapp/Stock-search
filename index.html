@@ -38,96 +38,69 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sug-item{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;}
 .sug-item:last-child{border-bottom:none;}
 .sug-item:active{background:var(--surface2);}
-.card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow:hidden;animation:fadeUp 0.35s ease;margin-bottom:20px;}
-.card-header{padding:24px 24px 20px;border-bottom:1px solid var(--border);position:relative;}
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow:hidden;animation:fadeUp 0.35s ease;margin-bottom:20px;padding:16px;}
+.card-header{padding:0;margin-bottom:12px;}
 .card-ticker{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;color:var(--text);}
 .card-price-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;}
 .card-price{font-family:'DM Mono',monospace;font-size:38px;font-weight:500;}
 .badge{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;padding:6px 14px;border-radius:8px;letter-spacing:0.5px;}
 .badge-up{background:rgba(45,212,160,0.12);color:var(--green);border:1px solid rgba(45,212,160,0.2);}
 .badge-down{background:rgba(240,107,107,0.1);color:var(--red);border:1px solid rgba(240,107,107,0.2);}
-.card-footer{padding:16px 20px;}
+.card-footer{padding-top:12px;}
 .state{padding:60px 20px;text-align:center;color:var(--muted);}
 .state-icon{font-size:36px;margin-bottom:16px;}
 .hidden{display:none !important;}
-canvas{width:100%;height:80px;margin-top:10px;border-radius:6px;}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- SETUP SCREEN -->
-  <div class="setup-screen" id="setupScreen">
-    <div class="logo">Market Terminal</div>
-    <div class="setup-title">Stock Search</div>
-    <div class="setup-sub">Entrez votre clé API pour commencer</div>
-    <input class="setup-field" type="password" id="keyInput" placeholder="Clé API FMP" autocomplete="off"/>
-    <button class="setup-btn" onclick="activateKey()">Activer →</button>
-    <div class="setup-note">Clé stockée localement · Non transmise<br/>financialmodelingprep.com</div>
-  </div>
-
-  <!-- MAIN SCREEN -->
-  <div class="main-screen hidden" id="mainScreen">
-    <div class="topbar">
-      <div class="topbar-logo">Market Terminal</div>
-      <button class="key-btn" onclick="resetKey()">⚙ Clé API</button>
-    </div>
-
-    <div class="search-wrap">
-      <input class="search-input" type="text" id="searchInput" placeholder="Apple, AAPL..." autocomplete="off"/>
-      <div class="search-icon">⌕</div>
-    </div>
-    <div class="suggestions hidden" id="suggestions"></div>
-    <div id="resultArea">
-      <div class="state"><div class="state-icon">◎</div>Rechercher par nom ou ticker</div>
-    </div>
-  </div>
+<div class="setup-screen" id="setupScreen">
+  <div class="logo">Market Terminal</div>
+  <div class="setup-title">Stock Search</div>
+  <div class="setup-sub">Entrez votre clé API pour commencer</div>
+  <input class="setup-field" type="password" id="keyInput" placeholder="Clé API FMP"/>
+  <button class="setup-btn" onclick="activateKey()">Activer →</button>
+  <div class="setup-note">Clé stockée localement · Non transmise<br/>financialmodelingprep.com</div>
 </div>
 
-<!-- Chart.js pour mini-graph -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="main-screen hidden" id="mainScreen">
+  <div class="topbar">
+    <div class="topbar-logo">Market Terminal</div>
+    <button class="key-btn" onclick="resetKey()">⚙ Clé API</button>
+  </div>
+
+  <div class="search-wrap">
+    <input class="search-input" type="text" id="searchInput" placeholder="Apple, AAPL..." autocomplete="off"/>
+    <div class="search-icon">⌕</div>
+  </div>
+  <div class="suggestions hidden" id="suggestions"></div>
+  <div id="resultArea">
+    <div class="state"><div class="state-icon">◎</div>Rechercher par nom ou ticker</div>
+  </div>
+</div>
+</div>
 
 <script>
 let API_KEY = localStorage.getItem("fmp_key") || "";
 if(API_KEY) showMain();
-
-document.getElementById("keyInput").addEventListener("keydown",e=>{if(e.key==="Enter") activateKey();});
-
-function activateKey(){
-  const val = document.getElementById("keyInput").value.trim();
-  if(!val) return;
-  API_KEY = val;
-  localStorage.setItem("fmp_key",val);
-  showMain();
-}
-
-function resetKey(){
-  localStorage.removeItem("fmp_key");
-  API_KEY="";
-  document.getElementById("keyInput").value="";
-  document.getElementById("mainScreen").classList.add("hidden");
-  document.getElementById("setupScreen").classList.remove("hidden");
-}
-
-function showMain(){
-  document.getElementById("setupScreen").classList.add("hidden");
-  document.getElementById("mainScreen").classList.remove("hidden");
-  document.getElementById("searchInput").focus();
-}
+document.getElementById("keyInput").addEventListener("keydown", e=>{if(e.key==="Enter") activateKey();});
+function activateKey(){const val=document.getElementById("keyInput").value.trim(); if(!val) return; API_KEY=val; localStorage.setItem("fmp_key",val); showMain();}
+function resetKey(){localStorage.removeItem("fmp_key"); API_KEY=""; document.getElementById("keyInput").value=""; document.getElementById("mainScreen").classList.add("hidden"); document.getElementById("setupScreen").classList.remove("hidden");}
+function showMain(){document.getElementById("setupScreen").classList.add("hidden"); document.getElementById("mainScreen").classList.remove("hidden"); document.getElementById("searchInput").focus();}
 
 // RECHERCHE
 let debounceTimer=null;
 document.getElementById("searchInput").addEventListener("input", e=>{
-  const q = e.target.value.trim();
-  clearTimeout(debounceTimer);
-  hideSuggestions();
+  const q=e.target.value.trim();
+  clearTimeout(debounceTimer); hideSuggestions();
   if(q.length<2) return;
   debounceTimer=setTimeout(()=>doSearch(q),350);
 });
 
 async function doSearch(q){
   try{
-    const res=await fetch(`https://financialmodelingprep.com/stable/search-symbol?query=${encodeURIComponent(q)}&apikey=${API_KEY}`);
+    const res=await fetch(`https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=7&apikey=${API_KEY}`);
     const data=await res.json();
     if(!Array.isArray(data)||data.length===0){hideSuggestions(); return;}
     renderSuggestions(data.slice(0,7));
@@ -143,46 +116,37 @@ function renderSuggestions(items){
     </div>`).join("");
   box.classList.remove("hidden");
 }
-
 function hideSuggestions(){document.getElementById("suggestions").classList.add("hidden");}
 
-// LOAD QUOTE + mini-chart
+// LOAD QUOTE
 async function loadQuote(symbol){
   hideSuggestions();
   document.getElementById("searchInput").value=symbol;
   setResult(`<div class="state"><div class="state-icon">◎</div>Chargement...</div>`);
 
   try{
-    const resQuote=await fetch(`https://financialmodelingprep.com/api/v4/quote-short/${symbol}?apikey=${API_KEY}`);
-    const dataQuote=await resQuote.json();
-    if(!Array.isArray(dataQuote)||!dataQuote[0]){setResult('Données indisponibles'); return;}
-    const price=dataQuote[0].price;
-
-    // données historiques mini-graph
-    const resHist=await fetch(`https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=10&apikey=${API_KEY}`);
-    const dataHist=await resHist.json();
-    const hist=(dataHist.historical||[]).reverse().map(d=>d.close);
-
+    const res=await fetch(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${API_KEY}`);
+    const data=await res.json();
+    if(!Array.isArray(data)||data.length===0){setResult(`<div class="state"><div class="state-icon">⚠</div>Données indisponibles pour ${symbol}</div>`); return;}
+    const d=data[0];
+    const isUp=d.change>=0; const accent=isUp?'var(--green)':'var(--red)'; const badgeClass=isUp?'badge-up':'badge-down';
+    const arrow=isUp?'▲':'▼'; const pct=Math.abs(d.changesPercentage||0).toFixed(2);
+    const yahooUrl=`https://finance.yahoo.com/quote/${d.symbol}`;
     setResult(`
       <div class="card">
-        <div class="card-ticker">${symbol}</div>
-        <div class="card-price-row">
-          <div class="card-price">${price.toFixed(2)} USD</div>
+        <div class="card-header">
+          <div class="card-ticker">${d.symbol}</div>
+          <div class="card-price-row">
+            <div class="card-price" style="color:${accent}">${d.price}</div>
+            <div class="badge ${badgeClass}">${arrow} ${pct}%</div>
+          </div>
         </div>
-        <canvas id="sparkline"></canvas>
-      </div>`);
-
-    const ctx=document.getElementById('sparkline').getContext('2d');
-    new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:hist.map((_,i)=>i),
-        datasets:[{data:hist,borderColor:price>=hist[0]?'#2dd4a0':'#f06b6b',fill:false,tension:0.3}]
-      },
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}
-    });
-
-  }catch(e){setResult('Erreur chargement');}
+        <div class="card-footer">
+          <a class="yahoo-btn" href="${yahooUrl}" target="_blank" style="color:${accent};text-decoration:none;">↗ Ouvrir Yahoo Finance</a>
+        </div>
+      </div>
+    `);
+  }catch(e){setResult(`<div class="state"><div class="state-icon">⚠</div>Erreur chargement ${symbol}</div>`);}
 }
 
 function setResult(html){document.getElementById("resultArea").innerHTML=html;}
