@@ -40,7 +40,7 @@ function saveKey(){
     alert("Clé enregistrée");
 }
 
-// Débounce pour limiter les appels
+// Debounce pour limiter les appels
 let timer;
 document.getElementById("search").addEventListener("input", e=>{
     const q = e.target.value.trim();
@@ -52,10 +52,10 @@ document.getElementById("search").addEventListener("input", e=>{
     timer = setTimeout(()=>search(q), 400);
 });
 
-// Appel API de recherche
+// Nouvelle API de recherche (v4)
 async function search(q){
     try {
-        const url = `https://financialmodelingprep.com/stable/search-symbol?query=${encodeURIComponent(q)}&apikey=${API_KEY}`;
+        const url = `https://financialmodelingprep.com/api/v4/search-ticker?query=${encodeURIComponent(q)}&limit=7&apikey=${API_KEY}`;
         const res = await fetch(url);
         const data = await res.json();
         renderSuggestions(data);
@@ -68,6 +68,7 @@ async function search(q){
 function renderSuggestions(list){
     const box = document.getElementById("suggestions");
     box.innerHTML = "";
+    if(!Array.isArray(list) || list.length===0) return;
     list.forEach(s => {
         const div = document.createElement("div");
         div.className = "sug";
@@ -77,13 +78,13 @@ function renderSuggestions(list){
     });
 }
 
-// Charger le quote (endpoint gratuit compatible)
+// Charger le quote (v4 short)
 async function loadQuote(symbol){
     document.getElementById("suggestions").innerHTML = "";
     try {
         const res = await fetch(`https://financialmodelingprep.com/api/v4/quote-short/${symbol}?apikey=${API_KEY}`);
         const data = await res.json();
-        if (!data || !data[0]) {
+        if (!Array.isArray(data) || !data[0]) {
           document.getElementById("result").innerHTML = "Données indisponibles";
           return;
         }
@@ -95,6 +96,7 @@ async function loadQuote(symbol){
           </div>`;
     } catch(e) {
         console.log("Erreur quote", e);
+        document.getElementById("result").innerHTML = "Données indisponibles";
     }
 }
 </script>
