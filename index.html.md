@@ -1,0 +1,699 @@
+<!DOCTYPE html>  
+  
+<html lang="fr">  
+<head>  
+  <meta charset="UTF-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />  
+  <meta name="apple-mobile-web-app-capable" content="yes" />  
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />  
+  <title>Market Terminal</title>  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />  
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />  
+  <style>  
+    :root {  
+      --bg: #080a0d;  
+      --surface: #0f1318;  
+      --surface2: #141921;  
+      --border: #1c2330;  
+      --border2: #232e3d;  
+      --text: #dde6f0;  
+      --muted: #4a5a6e;  
+      --faint: #1c2633;  
+      --green: #2dd4a0;  
+      --green-dim: rgba(45,212,160,0.12);  
+      --green-border: rgba(45,212,160,0.2);  
+      --red: #f06b6b;  
+      --red-dim: rgba(240,107,107,0.1);  
+      --red-border: rgba(240,107,107,0.2);  
+      --accent: #3b82f6;  
+    }  
+  
+```  
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }  
+  
+body {  
+  background: var(--bg);  
+  color: var(--text);  
+  font-family: 'DM Sans', sans-serif;  
+  min-height: 100vh;  
+  overscroll-behavior: none;  
+}  
+  
+/* Grid texture */  
+body::before {  
+  content: '';  
+  position: fixed; inset: 0;  
+  background-image:  
+    linear-gradient(rgba(45,212,160,0.025) 1px, transparent 1px),  
+    linear-gradient(90deg, rgba(45,212,160,0.025) 1px, transparent 1px);  
+  background-size: 40px 40px;  
+  pointer-events: none;  
+  z-index: 0;  
+}  
+  
+.app {  
+  position: relative;  
+  z-index: 1;  
+  max-width: 640px;  
+  margin: 0 auto;  
+  padding: 48px 20px 60px;  
+}  
+  
+/* **──** SETUP SCREEN **──** */  
+.setup-screen {  
+  display: flex;  
+  flex-direction: column;  
+  align-items: center;  
+  justify-content: center;  
+  min-height: 80vh;  
+  text-align: center;  
+  animation: fadeUp 0.5s ease;  
+}  
+  
+.logo {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 11px;  
+  letter-spacing: 4px;  
+  color: var(--green);  
+  text-transform: uppercase;  
+  margin-bottom: 16px;  
+}  
+  
+.setup-title {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 28px;  
+  font-weight: 500;  
+  color: var(--text);  
+  margin-bottom: 8px;  
+  letter-spacing: -1px;  
+}  
+  
+.setup-sub {  
+  font-size: 14px;  
+  color: var(--muted);  
+  margin-bottom: 40px;  
+  font-weight: 300;  
+}  
+  
+.setup-field {  
+  width: 100%;  
+  max-width: 380px;  
+  background: var(--surface);  
+  border: 1px solid var(--border2);  
+  border-radius: 10px;  
+  padding: 16px 20px;  
+  font-family: 'DM Mono', monospace;  
+  font-size: 14px;  
+  color: var(--text);  
+  outline: none;  
+  text-align: center;  
+  letter-spacing: 1px;  
+  transition: border-color 0.2s, box-shadow 0.2s;  
+  margin-bottom: 12px;  
+}  
+  
+.setup-field::placeholder { color: var(--muted); letter-spacing: 0.5px; }  
+.setup-field:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(45,212,160,0.08); }  
+  
+.setup-btn {  
+  width: 100%;  
+  max-width: 380px;  
+  background: var(--green);  
+  border: none;  
+  border-radius: 10px;  
+  padding: 16px;  
+  font-family: 'DM Mono', monospace;  
+  font-size: 14px;  
+  font-weight: 500;  
+  color: #050a07;  
+  cursor: pointer;  
+  letter-spacing: 1px;  
+  transition: opacity 0.2s, transform 0.1s;  
+}  
+  
+.setup-btn:active { transform: scale(0.98); opacity: 0.9; }  
+  
+.setup-note {  
+  font-size: 11px;  
+  color: var(--faint);  
+  margin-top: 20px;  
+  font-family: 'DM Mono', monospace;  
+  letter-spacing: 0.5px;  
+}  
+  
+/* **──** MAIN SCREEN **──** */  
+.main-screen { animation: fadeUp 0.4s ease; }  
+  
+.topbar {  
+  display: flex;  
+  align-items: center;  
+  justify-content: space-between;  
+  margin-bottom: 28px;  
+}  
+  
+.topbar-logo {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 11px;  
+  letter-spacing: 3px;  
+  color: var(--green);  
+  text-transform: uppercase;  
+}  
+  
+.key-btn {  
+  background: none;  
+  border: 1px solid var(--border);  
+  border-radius: 6px;  
+  padding: 6px 12px;  
+  font-family: 'DM Mono', monospace;  
+  font-size: 10px;  
+  color: var(--muted);  
+  cursor: pointer;  
+  letter-spacing: 1px;  
+  transition: all 0.2s;  
+}  
+.key-btn:hover { border-color: var(--border2); color: var(--text); }  
+  
+/* Search */  
+.search-wrap { position: relative; margin-bottom: 8px; }  
+  
+.search-input {  
+  width: 100%;  
+  background: var(--surface);  
+  border: 1px solid var(--border2);  
+  border-radius: 12px;  
+  padding: 18px 56px 18px 20px;  
+  font-family: 'DM Sans', sans-serif;  
+  font-size: 16px;  
+  color: var(--text);  
+  outline: none;  
+  transition: border-color 0.2s, box-shadow 0.2s;  
+}  
+  
+.search-input::placeholder { color: var(--muted); }  
+.search-input:focus {  
+  border-color: var(--green);  
+  box-shadow: 0 0 0 3px rgba(45,212,160,0.07);  
+}  
+  
+.search-icon {  
+  position: absolute;  
+  right: 18px; top: 50%;  
+  transform: translateY(-50%);  
+  color: var(--green);  
+  font-size: 20px;  
+  pointer-events: none;  
+}  
+  
+/* Suggestions dropdown */  
+.suggestions {  
+  background: var(--surface);  
+  border: 1px solid var(--border2);  
+  border-radius: 12px;  
+  overflow: hidden;  
+  margin-bottom: 20px;  
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);  
+}  
+  
+.sug-item {  
+  display: flex;  
+  align-items: center;  
+  gap: 14px;  
+  padding: 14px 20px;  
+  cursor: pointer;  
+  border-bottom: 1px solid var(--border);  
+  transition: background 0.15s;  
+}  
+.sug-item:last-child { border-bottom: none; }  
+.sug-item:active { background: var(--surface2); }  
+  
+.sug-ticker {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 14px;  
+  font-weight: 500;  
+  color: var(--green);  
+  min-width: 90px;  
+}  
+  
+.sug-info { flex: 1; min-width: 0; }  
+.sug-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }  
+.sug-exch { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }  
+  
+.sug-type {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 10px;  
+  color: var(--muted);  
+  background: var(--faint);  
+  padding: 3px 8px;  
+  border-radius: 4px;  
+  letter-spacing: 1px;  
+}  
+  
+/* Card */  
+.card {  
+  background: var(--surface);  
+  border: 1px solid var(--border2);  
+  border-radius: 16px;  
+  overflow: hidden;  
+  animation: fadeUp 0.35s ease;  
+}  
+  
+.card-header {  
+  padding: 24px 24px 20px;  
+  border-bottom: 1px solid var(--border);  
+  position: relative;  
+}  
+  
+.card-accent-bar {  
+  position: absolute;  
+  top: 0; left: 0; right: 0;  
+  height: 3px;  
+}  
+  
+.card-row1 {  
+  display: flex;  
+  align-items: flex-start;  
+  justify-content: space-between;  
+  gap: 12px;  
+  margin-bottom: 16px;  
+}  
+  
+.card-ticker {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 26px;  
+  font-weight: 500;  
+  color: var(--text);  
+  letter-spacing: 0.5px;  
+}  
+  
+.card-name {  
+  font-size: 13px;  
+  color: var(--muted);  
+  margin-top: 4px;  
+  font-weight: 300;  
+}  
+  
+.card-exchange {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 10px;  
+  letter-spacing: 2px;  
+  color: var(--muted);  
+  background: var(--faint);  
+  padding: 5px 10px;  
+  border-radius: 6px;  
+  white-space: nowrap;  
+  border: 1px solid var(--border);  
+  margin-top: 4px;  
+}  
+  
+.card-price-row {  
+  display: flex;  
+  align-items: center;  
+  gap: 14px;  
+  flex-wrap: wrap;  
+}  
+  
+.card-price {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 38px;  
+  font-weight: 500;  
+  letter-spacing: -2px;  
+}  
+  
+.card-currency {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 13px;  
+  color: var(--muted);  
+  margin-bottom: 2px;  
+  align-self: flex-end;  
+}  
+  
+.badge {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 14px;  
+  font-weight: 500;  
+  padding: 6px 14px;  
+  border-radius: 8px;  
+  letter-spacing: 0.5px;  
+}  
+  
+.badge-up { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }  
+.badge-down { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }  
+  
+.card-metrics {  
+  display: grid;  
+  grid-template-columns: 1fr 1fr 1fr;  
+  gap: 0;  
+}  
+  
+.metric {  
+  padding: 16px 20px;  
+  border-right: 1px solid var(--border);  
+  border-bottom: 1px solid var(--border);  
+}  
+  
+.metric:nth-child(3n) { border-right: none; }  
+.metric:nth-last-child(-n+3) { border-bottom: none; }  
+  
+.metric-label {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 9px;  
+  letter-spacing: 2px;  
+  color: var(--muted);  
+  text-transform: uppercase;  
+  margin-bottom: 6px;  
+}  
+  
+.metric-value {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 14px;  
+  color: var(--text);  
+  font-weight: 400;  
+}  
+  
+.card-footer { padding: 16px 20px; }  
+  
+.yahoo-btn {  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  gap: 8px;  
+  width: 100%;  
+  padding: 14px;  
+  background: var(--green-dim);  
+  border: 1px solid var(--green-border);  
+  border-radius: 10px;  
+  color: var(--green);  
+  font-family: 'DM Mono', monospace;  
+  font-size: 13px;  
+  letter-spacing: 0.5px;  
+  text-decoration: none;  
+  transition: background 0.2s;  
+}  
+  
+.yahoo-btn:active { background: rgba(45,212,160,0.2); }  
+  
+/* States */  
+.state {  
+  text-align: center;  
+  padding: 60px 20px;  
+  color: var(--muted);  
+  font-family: 'DM Mono', monospace;  
+  font-size: 13px;  
+  letter-spacing: 1px;  
+  line-height: 2;  
+}  
+  
+.state-icon { font-size: 36px; margin-bottom: 16px; }  
+  
+.spinner {  
+  display: inline-block;  
+  width: 24px; height: 24px;  
+  border: 2px solid var(--border2);  
+  border-top-color: var(--green);  
+  border-radius: 50%;  
+  animation: spin 0.7s linear infinite;  
+}  
+  
+.hint {  
+  font-family: 'DM Mono', monospace;  
+  font-size: 10px;  
+  color: var(--faint);  
+  text-align: center;  
+  margin-top: 28px;  
+  letter-spacing: 0.5px;  
+  line-height: 2;  
+}  
+  
+@keyframes fadeUp {  
+  from { opacity: 0; transform: translateY(12px); }  
+  to { opacity: 1; transform: translateY(0); }  
+}  
+  
+@keyframes spin { to { transform: rotate(360deg); } }  
+  
+.hidden { display: none !important; }  
+```  
+  
+  </style>  
+</head>  
+<body>  
+<div class="app">  
+  
+  <!-- **──** SETUP SCREEN **──** -->  
+  
+  <div class="setup-screen" id="setupScreen">  
+    <div class="logo">Market Terminal</div>  
+    <div class="setup-title">Stock Search</div>  
+    <div class="setup-sub">Entrez votre clé API pour commencer</div>  
+    <input  
+      class="setup-field"  
+      type="password"  
+      id="keyInput"  
+      placeholder="Clé API Financial Modeling Prep"  
+      autocomplete="off"  
+    />  
+    <button class="setup-btn" onclick="activateKey()">Activer →</button>  
+    <div class="setup-note">  
+      Clé stockée localement · Non transmise<br/>  
+      financialmodelingprep.com  
+    </div>  
+  </div>  
+  
+  <!-- **──** MAIN SCREEN **──** -->  
+  
+  <div class="main-screen hidden" id="mainScreen">  
+    <div class="topbar">  
+      <div class="topbar-logo">Market Terminal</div>  
+      <button class="key-btn" onclick="resetKey()">⚙ Clé API</button>  
+    </div>  
+  
+```  
+<div class="search-wrap">  
+  <input  
+    class="search-input"  
+    type="text"  
+    id="searchInput"  
+    placeholder="Apple, LVMH, BNP, AAPL, AIR.PA..."  
+    autocomplete="off"  
+    autocorrect="off"  
+    autocapitalize="off"  
+    spellcheck="false"  
+  />  
+  <div class="search-icon">**⌕**</div>  
+</div>  
+  
+<div class="suggestions hidden" id="suggestions"></div>  
+  
+<div id="resultArea">  
+  <div class="state">  
+    <div class="state-icon">**◎**</div>  
+    Rechercher par nom ou ticker  
+  </div>  
+</div>  
+  
+<div class="hint" id="hint">  
+  Résultats via Financial Modeling Prep<br/>  
+  250 requêtes / jour · Plan gratuit  
+</div>  
+```  
+  
+  </div>  
+  
+</div>  
+  
+<script>  
+  let API_KEY = localStorage.getItem("fmp_key") || "";  
+  let debounceTimer = null;  
+  
+  // **──** Init **──**  
+  if (API_KEY) showMain();  
+  
+  document.getElementById("keyInput").addEventListener("keydown", e => {  
+    if (e.key === "Enter") activateKey();  
+  });  
+  
+  function activateKey() {  
+    const val = document.getElementById("keyInput").value.trim();  
+    if (!val) return;  
+    API_KEY = val;  
+    localStorage.setItem("fmp_key", val);  
+    showMain();  
+  }  
+  
+  function showMain() {  
+    document.getElementById("setupScreen").classList.add("hidden");  
+    document.getElementById("mainScreen").classList.remove("hidden");  
+    document.getElementById("searchInput").focus();  
+  }  
+  
+  function resetKey() {  
+    localStorage.removeItem("fmp_key");  
+    API_KEY = "";  
+    document.getElementById("keyInput").value = "";  
+    document.getElementById("mainScreen").classList.add("hidden");  
+    document.getElementById("setupScreen").classList.remove("hidden");  
+  }  
+  
+  // **──** Search **──**  
+  document.getElementById("searchInput").addEventListener("input", e => {  
+    const q = e.target.value.trim();  
+    clearTimeout(debounceTimer);  
+    hideSuggestions();  
+    if (q.length < 2) return;  
+    debounceTimer = setTimeout(() => doSearch(q), 350);  
+  });  
+  
+  async function doSearch(q) {  
+    try {  
+      const res = await fetch(  
+        `https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=7&apikey=${API_KEY}`  
+      );  
+      const data = await res.json();  
+      if (!Array.isArray(data) || data.length === 0) { hideSuggestions(); return; }  
+      renderSuggestions(data.slice(0, 7));  
+    } catch(e) {  
+      hideSuggestions();  
+    }  
+  }  
+  
+  function renderSuggestions(items) {  
+    const box = document.getElementById("suggestions");  
+    box.innerHTML = items.map(s => `  
+      <div class="sug-item" onclick="loadQuote('${s.symbol}', '${(s.name||"").replace(/'/g,"\\'")}')">  
+        <div class="sug-ticker">${s.symbol}</div>  
+        <div class="sug-info">  
+          <div class="sug-name">${s.name || "—"}</div>  
+          <div class="sug-exch">${s.stockExchange || s.exchangeShortName || ""}</div>  
+        </div>  
+        <div class="sug-type">${s.type || "EQ"}</div>  
+      </div>  
+    `).join("");  
+    box.classList.remove("hidden");  
+  }  
+  
+  function hideSuggestions() {  
+    document.getElementById("suggestions").classList.add("hidden");  
+  }  
+  
+  // **──** Quote **──**  
+  async function loadQuote(symbol, name) {  
+    hideSuggestions();  
+    document.getElementById("searchInput").value = symbol;  
+    setResult(`  
+      <div class="state">  
+        <div><span class="spinner"></span></div>  
+        <div style="margin-top:16px">Chargement...</div>  
+      </div>  
+    `);  
+  
+    try {  
+      const res = await fetch(  
+        `https://financialmodelingprep.com/api/v3/quote/${encodeURIComponent(symbol)}?apikey=${API_KEY}`  
+      );  
+      const data = await res.json();  
+      if (!Array.isArray(data) || data.length === 0) throw new Error("No data");  
+      renderCard(data[0]);  
+    } catch(e) {  
+      setResult(`  
+        <div class="state">  
+          <div class="state-icon">⚠</div>  
+          Données indisponibles pour ${symbol}  
+        </div>  
+      `);  
+    }  
+  }  
+  
+  function renderCard(d) {  
+    const isUp = d.change >= 0;  
+    const accent = isUp ? "var(--green)" : "var(--red)";  
+    const badgeClass = isUp ? "badge-up" : "badge-down";  
+    const arrow = isUp ? "▲" : "▼";  
+    const pct = Math.abs(d.changesPercentage || 0).toFixed(2);  
+    const yahooUrl = `https://finance.yahoo.com/quote/${d.symbol}`;  
+  
+    setResult(`  
+      <div class="card">  
+        <div class="card-header">  
+          <div class="card-accent-bar" style="background:${accent}"></div>  
+          <div class="card-row1">  
+            <div>  
+              <div class="card-ticker">${d.symbol}</div>  
+              <div class="card-name">${d.name || "—"}</div>  
+            </div>  
+            <div class="card-exchange">${d.exchange || d.exchangeShortName || "—"}</div>  
+          </div>  
+          <div class="card-price-row">  
+            <div class="card-currency">${d.currency || "USD"}</div>  
+            <div class="card-price" style="color:${accent}">${fmt(d.price)}</div>  
+            <div class="badge ${badgeClass}">${arrow} ${pct}%</div>  
+          </div>  
+        </div>  
+  
+        <div class="card-metrics">  
+          <div class="metric">  
+            <div class="metric-label">Variation</div>  
+            <div class="metric-value" style="color:${accent}">${isUp?"+":""}${fmt(d.change)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">Clôture J-1</div>  
+            <div class="metric-value">${fmt(d.previousClose)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">Mkt Cap</div>  
+            <div class="metric-value">${fmtCap(d.marketCap)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">Open</div>  
+            <div class="metric-value">${fmt(d.open)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">High</div>  
+            <div class="metric-value">${fmt(d.dayHigh)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">Low</div>  
+            <div class="metric-value">${fmt(d.dayLow)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">Volume</div>  
+            <div class="metric-value">${fmtCap(d.volume)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">52W High</div>  
+            <div class="metric-value">${fmt(d.yearHigh)}</div>  
+          </div>  
+          <div class="metric">  
+            <div class="metric-label">52W Low</div>  
+            <div class="metric-value">${fmt(d.yearLow)}</div>  
+          </div>  
+        </div>  
+  
+        <div class="card-footer">  
+          <a class="yahoo-btn" href="${yahooUrl}" target="_blank">  
+            ↗ &nbsp;Ouvrir dans Yahoo Finance  
+          </a>  
+        </div>  
+      </div>  
+    `);  
+  }  
+  
+  function setResult(html) {  
+    document.getElementById("resultArea").innerHTML = html;  
+  }  
+  
+  function fmt(val, dec = 2) {  
+    if (val == null || isNaN(val)) return "—";  
+    return Number(val).toLocaleString("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec });  
+  }  
+  
+  function fmtCap(val) {  
+    if (!val || isNaN(val)) return "—";  
+    if (val >= 1e12) return (val/1e12).toFixed(2) + " T";  
+    if (val >= 1e9)  return (val/1e9).toFixed(2)  + " B";  
+    if (val >= 1e6)  return (val/1e6).toFixed(2)  + " M";  
+    return val.toLocaleString("fr-FR");  
+  }  
+</script>  
+  
+</body>  
+</html>  
