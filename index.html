@@ -2,254 +2,101 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Market Terminal</title>
 
 <style>
-
-body{
-background:#0b0f14;
-color:white;
-font-family:Arial,Helvetica,sans-serif;
-margin:0;
-padding:40px;
-max-width:700px;
-margin:auto;
-}
-
-h1{
-font-size:26px;
-margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:14px;
-font-size:16px;
-border-radius:8px;
-border:none;
-outline:none;
-margin-bottom:10px;
-}
-
-button{
-padding:12px 18px;
-border:none;
-border-radius:8px;
-background:#19c37d;
-color:black;
-font-weight:bold;
-cursor:pointer;
-}
-
-.card{
-margin-top:30px;
-padding:20px;
-border-radius:12px;
-background:#151b23;
-}
-
-.price{
-font-size:32px;
-margin-top:10px;
-}
-
-.green{color:#19c37d}
-.red{color:#ff6b6b}
-
-.suggestions{
-background:#151b23;
-border-radius:10px;
-margin-top:5px;
-overflow:hidden;
-}
-
-.sug{
-padding:10px;
-cursor:pointer;
-border-bottom:1px solid #222;
-}
-
-.sug:hover{
-background:#1d2632;
-}
-
+body{background:#0b0f14;color:#fff;font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:auto;}
+input{width:100%;padding:14px;margin:10px 0;font-size:16px;border-radius:8px;border:none;outline:none;}
+button{padding:12px 18px;background:#19c37d;border:none;border-radius:8px;color:#000;font-weight:bold;cursor:pointer;}
+.suggestions{background:#141a22;border-radius:10px;overflow:hidden;margin-top:5px;}
+.sug{padding:10px;cursor:pointer;border-bottom:1px solid #222;color:#fff;}
+.sug:hover{background:#1d2632;}
+.card{margin-top:30px;background:#141a22;padding:20px;border-radius:10px;}
 </style>
-</head>
 
+</head>
 <body>
 
-<h1>Market Terminal</h1>
+<h2>Market Terminal</h2>
 
-<div id="setup">
-
-<input
-type="password"
-id="apiKey"
-placeholder="Entrer votre clé API Financial Modeling Prep"
-/>
-
+<!-- Setup clé API -->
+<input type="text" id="apikey" placeholder="Entrer votre clé API FMP"/>
 <button onclick="saveKey()">Activer</button>
 
-</div>
-
-
-<div id="app" style="display:none">
-
-<input
-type="text"
-id="search"
-placeholder="Rechercher Apple, AAPL, LVMH..."
-autocomplete="off"
-/>
-
+<!-- Recherche -->
+<input type="text" id="search" placeholder="Rechercher Apple, AAPL..."/>
 <div id="suggestions" class="suggestions"></div>
-
 <div id="result"></div>
 
-</div>
-
-
 <script>
-
+// Récupérer la clé stockée
 let API_KEY = localStorage.getItem("fmp_key") || "";
-let debounce;
+document.getElementById("apikey").value = API_KEY;
 
-if(API_KEY){
-document.getElementById("setup").style.display="none";
-document.getElementById("app").style.display="block";
-}
-
+// Enregistrer la clé
 function saveKey(){
-
-const key=document.getElementById("apiKey").value.trim();
-
-if(!key)return;
-
-API_KEY=key;
-
-localStorage.setItem("fmp_key",key);
-
-document.getElementById("setup").style.display="none";
-document.getElementById("app").style.display="block";
-
+    API_KEY = document.getElementById("apikey").value.trim();
+    if(!API_KEY) { alert("Clé API requise"); return; }
+    localStorage.setItem("fmp_key", API_KEY);
+    alert("Clé enregistrée");
 }
 
-
-document.getElementById("search").addEventListener("input",e=>{
-
-const q=e.target.value.trim();
-
-clearTimeout(debounce);
-
-if(q.length<2){
-document.getElementById("suggestions").innerHTML="";
-return;
-}
-
-debounce=setTimeout(()=>search(q),400);
-
+// Débounce pour limiter les appels
+let timer;
+document.getElementById("search").addEventListener("input", e=>{
+    const q = e.target.value.trim();
+    clearTimeout(timer);
+    if(q.length < 2) {
+        document.getElementById("suggestions").innerHTML = "";
+        return;
+    }
+    timer = setTimeout(()=>search(q), 400);
 });
 
-
+// Appel API de recherche
 async function search(q){
-
-try{
-
-const url=`https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=7&apikey=${API_KEY}`;
-
-const res=await fetch(url);
-
-const data=await res.json();
-
-renderSuggestions(data);
-
-}catch(e){
-
-console.log(e);
-
+    try {
+        const url = `https://financialmodelingprep.com/stable/search-symbol?query=${encodeURIComponent(q)}&apikey=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        renderSuggestions(data);
+    } catch(e) {
+        console.log("Erreur recherche", e);
+    }
 }
 
-}
-
-
+// Afficher suggestions
 function renderSuggestions(list){
-
-const box=document.getElementById("suggestions");
-
-box.innerHTML="";
-
-list.forEach(s=>{
-
-const div=document.createElement("div");
-
-div.className="sug";
-
-div.innerHTML=`${s.symbol} — ${s.name}`;
-
-div.onclick=()=>loadQuote(s.symbol);
-
-box.appendChild(div);
-
-});
-
+    const box = document.getElementById("suggestions");
+    box.innerHTML = "";
+    list.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "sug";
+        div.textContent = `${s.symbol} — ${s.name}`;
+        div.onclick = ()=> loadQuote(s.symbol);
+        box.appendChild(div);
+    });
 }
 
-
+// Charger le quote
 async function loadQuote(symbol){
-
-document.getElementById("suggestions").innerHTML="";
-
-try{
-
-const url=`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${API_KEY}`;
-
-const res=await fetch(url);
-
-const data=await res.json();
-
-const d=data[0];
-
-renderCard(d);
-
-}catch(e){
-
-console.log(e);
-
+    document.getElementById("suggestions").innerHTML = "";
+    try {
+        const res = await fetch(`https://financialmodelingprep.com/stable/quote?symbol=${symbol}&apikey=${API_KEY}`);
+        const data = await res.json();
+        const d = data[0];
+        document.getElementById("result").innerHTML = `
+          <div class="card">
+            <h3>${d.symbol}</h3>
+            <div>${d.name || ""}</div>
+            <div style="font-size:28px;margin-top:10px;">${d.price} ${d.currency || "USD"}</div>
+            <div>${d.change} (${d.changesPercentage})</div>
+          </div>`;
+    } catch(e) {
+        console.log("Erreur quote", e);
+    }
 }
-
-}
-
-
-function renderCard(d){
-
-const up=d.change>=0;
-
-const color=up?"green":"red";
-
-document.getElementById("result").innerHTML=
-
-`
-<div class="card">
-
-<h2>${d.symbol}</h2>
-
-<div>${d.name||""}</div>
-
-<div class="price ${color}">
-${d.price.toFixed(2)} ${d.currency||"USD"}
-</div>
-
-<div class="${color}">
-${up?"+":""}${d.change.toFixed(2)} (${d.changesPercentage.toFixed(2)}%)
-</div>
-
-</div>
-`;
-
-}
-
 </script>
-
 </body>
 </html>
