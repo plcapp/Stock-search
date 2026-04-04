@@ -2,9 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Market Terminal</title>
-
 <style>
 body{background:#0b0f14;color:#fff;font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:auto;}
 input{width:100%;padding:14px;margin:10px 0;font-size:16px;border-radius:8px;border:none;outline:none;}
@@ -14,7 +13,6 @@ button{padding:12px 18px;background:#19c37d;border:none;border-radius:8px;color:
 .sug:hover{background:#1d2632;}
 .card{margin-top:30px;background:#141a22;padding:20px;border-radius:10px;}
 </style>
-
 </head>
 <body>
 
@@ -79,24 +77,27 @@ function renderSuggestions(list){
     });
 }
 
-// Charger le quote
+// Charger le quote (endpoint gratuit compatible)
 async function loadQuote(symbol){
     document.getElementById("suggestions").innerHTML = "";
     try {
-        const res = await fetch(`https://financialmodelingprep.com/stable/quote?symbol=${symbol}&apikey=${API_KEY}`);
+        const res = await fetch(`https://financialmodelingprep.com/api/v4/quote-short/${symbol}?apikey=${API_KEY}`);
         const data = await res.json();
+        if (!data || !data[0]) {
+          document.getElementById("result").innerHTML = "Données indisponibles";
+          return;
+        }
         const d = data[0];
         document.getElementById("result").innerHTML = `
           <div class="card">
             <h3>${d.symbol}</h3>
-            <div>${d.name || ""}</div>
-            <div style="font-size:28px;margin-top:10px;">${d.price} ${d.currency || "USD"}</div>
-            <div>${d.change} (${d.changesPercentage})</div>
+            <div style="font-size:28px;margin-top:10px;">${d.price} USD</div>
           </div>`;
     } catch(e) {
         console.log("Erreur quote", e);
     }
 }
 </script>
+
 </body>
 </html>
