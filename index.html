@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Market Terminal</title>
-
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-
 <style>
 
 body{
@@ -122,6 +118,7 @@ color:#2dd4a0;
 margin-bottom:12px;
 font-size:13px;
 }
+</head>
 
 .news-item a{
 color:#dde6f0;
@@ -138,34 +135,24 @@ opacity:0.7;
 }
 
 </style>
-
 </head>
-
 <body>
-
 <h1>MARKET TERMINAL</h1>
-
 <div id="apikeyBox">
-
 <input id="apikey" placeholder="Entrer votre clé Alpha Vantage">
 <button onclick="saveKey()">Activer</button>
-
 </div>
-
 <button id="changeKeyBtn" class="smallbtn" onclick="showKeyInput()" style="display:none">
 ⚙ Modifier la clé API
 </button>
-
-<input id="search" placeholder="Rechercher Apple, LVMH, AAPL...">
-
+<input id="search" placeholder="Rechercher Apple, LVMH, SAP...">
 <div id="suggestions" class="suggestions"></div>
 <div id="result"></div>
-
 <script>
 
 let API_KEY = localStorage.getItem("av_key") || "";
 
-window.onload = function(){
+window.onload=function(){
 
 if(API_KEY){
 
@@ -181,10 +168,8 @@ function saveKey(){
 API_KEY=document.getElementById("apikey").value.trim();
 
 if(!API_KEY){
-
 alert("Clé API requise");
 return;
-
 }
 
 localStorage.setItem("av_key",API_KEY);
@@ -203,36 +188,82 @@ document.getElementById("changeKeyBtn").style.display="none";
 
 }
 
-let timer;
+const tickers=[
+
+{symbol:"AAPL",name:"Apple"},
+{symbol:"MSFT",name:"Microsoft"},
+{symbol:"NVDA",name:"Nvidia"},
+{symbol:"TSLA",name:"Tesla"},
+{symbol:"AMZN",name:"Amazon"},
+{symbol:"META",name:"Meta"},
+{symbol:"GOOGL",name:"Alphabet"},
+{symbol:"JPM",name:"JPMorgan"},
+{symbol:"V",name:"Visa"},
+{symbol:"WMT",name:"Walmart"},
+{symbol:"KO",name:"Coca-Cola"},
+{symbol:"MCD",name:"McDonald's"},
+{symbol:"BA",name:"Boeing"},
+{symbol:"CAT",name:"Caterpillar"},
+{symbol:"DIS",name:"Disney"},
+{symbol:"IBM",name:"IBM"},
+{symbol:"INTC",name:"Intel"},
+{symbol:"NKE",name:"Nike"},
+{symbol:"PG",name:"Procter & Gamble"},
+{symbol:"CRM",name:"Salesforce"},
+{symbol:"HD",name:"Home Depot"},
+{symbol:"MRK",name:"Merck"},
+{symbol:"VZ",name:"Verizon"},
+{symbol:"AXP",name:"American Express"},
+{symbol:"GS",name:"Goldman Sachs"},
+
+{symbol:"MC.PA",name:"LVMH"},
+{symbol:"AIR.PA",name:"Airbus"},
+{symbol:"OR.PA",name:"L'Oreal"},
+{symbol:"TTE.PA",name:"TotalEnergies"},
+{symbol:"SAN.PA",name:"Sanofi"},
+{symbol:"BNP.PA",name:"BNP Paribas"},
+{symbol:"AI.PA",name:"Air Liquide"},
+{symbol:"CAP.PA",name:"Capgemini"},
+{symbol:"SU.PA",name:"Schneider Electric"},
+{symbol:"KER.PA",name:"Kering"},
+{symbol:"RMS.PA",name:"Hermes"},
+{symbol:"ENGI.PA",name:"Engie"},
+{symbol:"HO.PA",name:"Thales"},
+
+{symbol:"SAP.DE",name:"SAP"},
+{symbol:"ASML.AS",name:"ASML"},
+{symbol:"SIE.DE",name:"Siemens"},
+{symbol:"ALV.DE",name:"Allianz"},
+{symbol:"ADS.DE",name:"Adidas"},
+{symbol:"BAS.DE",name:"BASF"},
+{symbol:"BAYN.DE",name:"Bayer"},
+{symbol:"IBE.MC",name:"Iberdrola"},
+{symbol:"ITX.MC",name:"Inditex"},
+{symbol:"ENI.MI",name:"ENI"}
+
+];
 
 document.getElementById("search").addEventListener("input",e=>{
 
-const q=e.target.value.trim();
+const q=e.target.value.toLowerCase();
 
-clearTimeout(timer);
-
-if(q.length<2){
+if(q.length<1){
 
 document.getElementById("suggestions").innerHTML="";
 return;
 
 }
 
-timer=setTimeout(()=>search(q),700);
+const results=tickers.filter(t=>
+
+t.symbol.toLowerCase().includes(q)||
+t.name.toLowerCase().includes(q)
+
+);
+
+renderSuggestions(results.slice(0,6));
 
 });
-
-async function search(q){
-
-const url=`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(q)}&apikey=${API_KEY}`;
-
-const res=await fetch(url);
-
-const data=await res.json();
-
-renderSuggestions(data.bestMatches||[]);
-
-}
 
 function renderSuggestions(list){
 
@@ -240,19 +271,15 @@ const box=document.getElementById("suggestions");
 
 box.innerHTML="";
 
-list.slice(0,6).forEach(s=>{
-
-const symbol=s["1. symbol"];
-const name=s["2. name"];
-const region=s["4. region"];
+list.forEach(s=>{
 
 const div=document.createElement("div");
 
 div.className="sug";
 
-div.textContent=`${symbol} — ${name} (${region})`;
+div.textContent=`${s.symbol} — ${s.name}`;
 
-div.onclick=()=>loadQuote(symbol);
+div.onclick=()=>loadQuote(s.symbol);
 
 box.appendChild(div);
 
@@ -265,6 +292,7 @@ async function loadQuote(symbol){
 document.getElementById("suggestions").innerHTML="";
 
 const res=await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`);
+
 const data=await res.json();
 
 const d=data["Global Quote"];
@@ -281,9 +309,7 @@ const color=change>=0?"green":"red";
 
 document.getElementById("result").innerHTML=
 
-`
-
-<div class="card">
+`<div class="card">
 
 <div class="card-header">
 
@@ -302,9 +328,7 @@ ${d["09. change"]} (${d["10. change percent"]})
 Chargement...
 </div>
 
-</div>
-
-`;
+</div>`;
 
 loadNews(symbol);
 
@@ -329,8 +353,6 @@ container.innerHTML="<h3>News & Sentiment</h3>";
 
 data.feed.slice(0,3).forEach(n=>{
 
-const sentiment=n.overall_sentiment_label;
-
 container.innerHTML+=`
 
 <div class="news-item">
@@ -338,18 +360,16 @@ container.innerHTML+=`
 <a href="${n.url}" target="_blank">${n.title}</a>
 
 <div class="sentiment">
-Sentiment : ${sentiment}
+Sentiment : ${n.overall_sentiment_label}
 </div>
 
-</div>
-
-`;
+</div>`;
 
 });
 
 }
 
 </script>
-
 </body>
 </html>
+:::
