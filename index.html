@@ -3,140 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Market Terminal - Finnhub</title>
+<title>Market Terminal</title>
+
 <style>
-body {
-  background: #0b0f14;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  padding: 40px;
-  max-width: 700px;
-  margin: auto;
+body{
+background:#0b0f14;
+color:#fff;
+font-family:Arial,sans-serif;
+padding:40px;
+max-width:700px;
+margin:auto;
 }
-input {
-  width: 100%;
-  padding: 14px;
-  margin: 10px 0;
-  font-size: 16px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
+
+input{
+width:100%;
+padding:14px;
+margin:10px 0;
+font-size:16px;
+border-radius:8px;
+border:none;
+outline:none;
 }
-button {
-  padding: 12px 18px;
-  background: #19c37d;
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  font-weight: bold;
-  cursor: pointer;
+
+button{
+padding:12px 18px;
+background:#19c37d;
+border:none;
+border-radius:8px;
+color:#000;
+font-weight:bold;
+cursor:pointer;
 }
-.suggestions {
-  background: #141a22;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 5px;
+
+.suggestions{
+background:#141a22;
+border-radius:10px;
+overflow:hidden;
+margin-top:5px;
 }
-.sug {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #222;
-  color: #fff;
+
+.sug{
+padding:10px;
+cursor:pointer;
+border-bottom:1px solid #222;
 }
-.sug:hover { background:#1d2632; }
-.card {
-  margin-top: 30px;
-  background: #141a22;
-  padding: 20px;
-  border-radius: 10px;
+
+.sug:hover{
+background:#1d2632;
 }
-.card h3 { margin:0 0 10px 0; }
-.card div { font-size: 28px; }
+
+.card{
+margin-top:30px;
+background:#141a22;
+padding:20px;
+border-radius:10px;
+}
 </style>
 </head>
+
 <body>
 
-<h2>Market Terminal (Finnhub)</h2>
+<h2>Market Terminal</h2>
 
-<!-- Setup clé API -->
-<input type="text" id="apikey" placeholder="Entrer votre clé API Finnhub"/>
+<input type="text" id="apikey" placeholder="Entrer votre clé Alpha Vantage"/>
 <button onclick="saveKey()">Activer</button>
 
-<!-- Recherche -->
-<input type="text" id="search" placeholder="Rechercher Apple, AAPL, LVMH..."/>
+<input type="text" id="search" placeholder="Rechercher Apple, LVMH, AAPL..."/>
+
 <div id="suggestions" class="suggestions"></div>
 <div id="result"></div>
 
 <script>
-let API_KEY = localStorage.getItem("finnhub_key") || "";
+
+let API_KEY = localStorage.getItem("av_key") || "";
 document.getElementById("apikey").value = API_KEY;
 
-// Enregistrer la clé
-function saveKey() {
-  API_KEY = document.getElementById("apikey").value.trim();
-  if(!API_KEY) { alert("Clé API requise"); return; }
-  localStorage.setItem("finnhub_key", API_KEY);
-  alert("Clé enregistrée ✅");
+function saveKey(){
+API_KEY = document.getElementById("apikey").value.trim();
+
+if(!API_KEY){
+alert("Clé API requise");
+return;
 }
 
-// Debounce pour limiter les appels
+localStorage.setItem("av_key",API_KEY);
+alert("Clé enregistrée");
+}
+
 let timer;
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.trim();
-  clearTimeout(timer);
-  if(q.length < 2) {
-    document.getElementById("suggestions").innerHTML = "";
-    return;
-  }
-  timer = setTimeout(()=>search(q), 400);
+
+document.getElementById("search").addEventListener("input", e=>{
+
+const q = e.target.value.trim();
+
+clearTimeout(timer);
+
+if(q.length<2){
+document.getElementById("suggestions").innerHTML="";
+return;
+}
+
+timer=setTimeout(()=>search(q),600);
+
 });
 
-// Rechercher symboles (Finnhub endpoint : /search)
-async function search(q) {
-  if(!API_KEY) return;
-  try {
-    const res = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${API_KEY}`);
-    const data = await res.json();
-    renderSuggestions(data.result || []);
-  } catch(e) {
-    console.log("Erreur recherche", e);
-  }
+async function search(q){
+
+try{
+
+const url=`https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(q)}&apikey=${API_KEY}`;
+
+const res=await fetch(url);
+
+const data=await res.json();
+
+renderSuggestions(data.bestMatches || []);
+
 }
 
-// Afficher suggestions
-function renderSuggestions(list) {
-  const box = document.getElementById("suggestions");
-  box.innerHTML = "";
-  list.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "sug";
-    div.textContent = `${s.symbol} — ${s.description}`;
-    div.onclick = ()=> loadQuote(s.symbol);
-    box.appendChild(div);
-  });
+catch(e){
+
+console.log("Erreur recherche",e);
+
 }
 
-// Charger quote (Finnhub /quote)
-async function loadQuote(symbol) {
-  document.getElementById("suggestions").innerHTML = "";
-  try {
-    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${API_KEY}`);
-    const data = await res.json();
-    if(!data || !data.c) {
-      document.getElementById("result").innerHTML = "Données indisponibles";
-      return;
-    }
-    document.getElementById("result").innerHTML = `
-      <div class="card">
-        <h3>${symbol}</h3>
-        <div>Prix : ${data.c} USD</div>
-        <div>Ouverture : ${data.o} | Haut : ${data.h} | Bas : ${data.l}</div>
-        <div>Dernière clôture : ${data.pc}</div>
-      </div>`;
-  } catch(e) {
-    console.log("Erreur quote", e);
-  }
 }
+
+function renderSuggestions(list){
+
+const box=document.getElementById("suggestions");
+
+box.innerHTML="";
+
+list.forEach(s=>{
+
+const symbol=s["1. symbol"];
+
+const name=s["2. name"];
+
+const region=s["4. region"];
+
+const div=document.createElement("div");
+
+div.className="sug";
+
+div.textContent=`${symbol} — ${name} (${region})`;
+
+div.onclick=()=>loadQuote(symbol);
+
+box.appendChild(div);
+
+});
+
+}
+
+async function loadQuote(symbol){
+
+document.getElementById("suggestions").innerHTML="";
+
+try{
+
+const res=await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`);
+
+const data=await res.json();
+
+const d=data["Global Quote"];
+
+if(!d){
+
+document.getElementById("result").innerHTML="Données indisponibles";
+
+return;
+
+}
+
+document.getElementById("result").innerHTML=`
+
+<div class="card">
+
+<h3>${d["01. symbol"]}</h3>
+
+<div style="font-size:28px;margin-top:10px;">
+
+${d["05. price"]}
+
+</div>
+
+<div style="margin-top:10px;">
+
+Variation: ${d["09. change"]} (${d["10. change percent"]})
+
+</div>
+
+</div>
+
+`;
+
+}
+
+catch(e){
+
+console.log("Erreur quote",e);
+
+}
+
+}
+
 </script>
 
 </body>
