@@ -94,7 +94,7 @@ font-size:22px;
 
 .price{
 font-family:'DM Mono',monospace;
-font-size:38px;
+font-size:42px;
 margin-top:10px;
 }
 
@@ -106,13 +106,35 @@ font-family:'DM Mono',monospace;
 .green{color:#2dd4a0}
 .red{color:#f87171}
 
-.card-body{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
+.news{
 padding:20px;
+border-top:1px solid #1c2330;
+}
+
+.news h3{
+font-size:14px;
+margin-bottom:10px;
 font-family:'DM Mono',monospace;
+color:#2dd4a0;
+}
+
+.news-item{
+margin-bottom:12px;
 font-size:13px;
+}
+
+.news-item a{
+color:#dde6f0;
+text-decoration:none;
+}
+
+.news-item a:hover{
+text-decoration:underline;
+}
+
+.sentiment{
+font-size:12px;
+opacity:0.7;
 }
 
 </style>
@@ -126,7 +148,6 @@ font-size:13px;
 <div id="apikeyBox">
 
 <input id="apikey" placeholder="Entrer votre clé Alpha Vantage">
-
 <button onclick="saveKey()">Activer</button>
 
 </div>
@@ -144,20 +165,17 @@ font-size:13px;
 
 let API_KEY = localStorage.getItem("av_key") || "";
 
-// vérifier au chargement
 window.onload = function(){
 
 if(API_KEY){
 
 document.getElementById("apikeyBox").style.display="none";
-
 document.getElementById("changeKeyBtn").style.display="block";
 
 }
 
 };
 
-// enregistrer clé
 function saveKey(){
 
 API_KEY=document.getElementById("apikey").value.trim();
@@ -165,7 +183,6 @@ API_KEY=document.getElementById("apikey").value.trim();
 if(!API_KEY){
 
 alert("Clé API requise");
-
 return;
 
 }
@@ -173,18 +190,15 @@ return;
 localStorage.setItem("av_key",API_KEY);
 
 document.getElementById("apikeyBox").style.display="none";
-
 document.getElementById("changeKeyBtn").style.display="block";
 
 alert("Clé enregistrée");
 
 }
 
-// afficher champ clé
 function showKeyInput(){
 
 document.getElementById("apikeyBox").style.display="block";
-
 document.getElementById("changeKeyBtn").style.display="none";
 
 }
@@ -200,7 +214,6 @@ clearTimeout(timer);
 if(q.length<2){
 
 document.getElementById("suggestions").innerHTML="";
-
 return;
 
 }
@@ -230,9 +243,7 @@ box.innerHTML="";
 list.slice(0,6).forEach(s=>{
 
 const symbol=s["1. symbol"];
-
 const name=s["2. name"];
-
 const region=s["4. region"];
 
 const div=document.createElement("div");
@@ -254,7 +265,6 @@ async function loadQuote(symbol){
 document.getElementById("suggestions").innerHTML="";
 
 const res=await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`);
-
 const data=await res.json();
 
 const d=data["Global Quote"];
@@ -262,13 +272,11 @@ const d=data["Global Quote"];
 if(!d){
 
 document.getElementById("result").innerHTML="Données indisponibles";
-
 return;
 
 }
 
 const change=parseFloat(d["09. change"]);
-
 const color=change>=0?"green":"red";
 
 document.getElementById("result").innerHTML=
@@ -284,28 +292,60 @@ document.getElementById("result").innerHTML=
 <div class="price">${d["05. price"]}</div>
 
 <div class="change ${color}">
-
 ${d["09. change"]} (${d["10. change percent"]})
-
 </div>
 
 </div>
 
-<div class="card-body">
-
-<div>Open</div><div>${d["02. open"]}</div>
-
-<div>High</div><div>${d["03. high"]}</div>
-
-<div>Low</div><div>${d["04. low"]}</div>
-
-<div>Prev Close</div><div>${d["08. previous close"]}</div>
-
+<div class="news" id="news">
+<h3>News & Sentiment</h3>
+Chargement...
 </div>
 
 </div>
 
 `;
+
+loadNews(symbol);
+
+}
+
+async function loadNews(symbol){
+
+const res=await fetch(`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${API_KEY}`);
+
+const data=await res.json();
+
+const container=document.getElementById("news");
+
+if(!data.feed){
+
+container.innerHTML="<h3>News</h3>Aucune news";
+return;
+
+}
+
+container.innerHTML="<h3>News & Sentiment</h3>";
+
+data.feed.slice(0,3).forEach(n=>{
+
+const sentiment=n.overall_sentiment_label;
+
+container.innerHTML+=`
+
+<div class="news-item">
+
+<a href="${n.url}" target="_blank">${n.title}</a>
+
+<div class="sentiment">
+Sentiment : ${sentiment}
+</div>
+
+</div>
+
+`;
+
+});
 
 }
 
