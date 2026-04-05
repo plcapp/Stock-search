@@ -50,6 +50,12 @@ font-family:'DM Mono',monospace;
 cursor:pointer;
 }
 
+.smallbtn{
+margin-top:10px;
+background:#1c2330;
+color:#fff;
+}
+
 .suggestions{
 background:#0f1318;
 border:1px solid #1c2330;
@@ -117,8 +123,17 @@ font-size:13px;
 
 <h1>MARKET TERMINAL</h1>
 
-<input id="apikey" placeholder="Clé API Alpha Vantage">
+<div id="apikeyBox">
+
+<input id="apikey" placeholder="Entrer votre clé Alpha Vantage">
+
 <button onclick="saveKey()">Activer</button>
+
+</div>
+
+<button id="changeKeyBtn" class="smallbtn" onclick="showKeyInput()" style="display:none">
+⚙ Modifier la clé API
+</button>
 
 <input id="search" placeholder="Rechercher Apple, LVMH, AAPL...">
 
@@ -128,8 +143,21 @@ font-size:13px;
 <script>
 
 let API_KEY = localStorage.getItem("av_key") || "";
-document.getElementById("apikey").value = API_KEY;
 
+// vérifier au chargement
+window.onload = function(){
+
+if(API_KEY){
+
+document.getElementById("apikeyBox").style.display="none";
+
+document.getElementById("changeKeyBtn").style.display="block";
+
+}
+
+};
+
+// enregistrer clé
 function saveKey(){
 
 API_KEY=document.getElementById("apikey").value.trim();
@@ -137,13 +165,27 @@ API_KEY=document.getElementById("apikey").value.trim();
 if(!API_KEY){
 
 alert("Clé API requise");
+
 return;
 
 }
 
 localStorage.setItem("av_key",API_KEY);
 
+document.getElementById("apikeyBox").style.display="none";
+
+document.getElementById("changeKeyBtn").style.display="block";
+
 alert("Clé enregistrée");
+
+}
+
+// afficher champ clé
+function showKeyInput(){
+
+document.getElementById("apikeyBox").style.display="block";
+
+document.getElementById("changeKeyBtn").style.display="none";
 
 }
 
